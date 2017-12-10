@@ -64,7 +64,7 @@ class MutliGridworldEnv(discrete.DiscreteEnv):
         L = 0.1
         PUNISH = -1e5
         X = 5.0
-        reward_d = 0
+        landmarkdist = 0
         new_positions = []
         is_done = True
         for pos, delta in zip(current, deltas): 
@@ -72,15 +72,16 @@ class MutliGridworldEnv(discrete.DiscreteEnv):
             new_position = self._limit_coordinates(new_position).astype(int)
             new_position = tuple(new_position.astype(np.int8).tolist())
             new_positions.append(new_position)
-            reward_d += (-L * self.distance_from_goals(new_position))
+            landmarkdist += (-L * self.distance_from_goals(new_position))
         is_done = set(new_positions) == set(self.goals)
 
-        collisions, distances = self.distance_pairs(new_positions)
-        reward_d += (-X * distances)        
+        collisions, pairwisedist = self.distance_pairs(new_positions)
+        pairwisedist = (-X * pairwisedist)
 
         step = 500 if is_done else -1
         step += collisions * PUNISH
-        reward = (reward_d, step)
+
+        reward = (landmarkdist, pairwisedist, step)
         new_state = self.get_state(new_positions)
         return [(1.0, new_state, reward, is_done)]
 
